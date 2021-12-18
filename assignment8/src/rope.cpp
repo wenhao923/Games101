@@ -57,7 +57,6 @@ namespace CGL {
         // }
     }
     
-    int i =0;
     void Rope::simulateVerlet(float delta_t, Vector2D gravity)
     {   
         for (auto &m : masses)
@@ -66,9 +65,10 @@ namespace CGL {
             {
                 double damping = 0.000005;
                 // TODO (Part 3.1): Set the new position of the rope mass
-                m->start_position = m->last_position;
-                m->last_position = m->position;
+                m->start_position = m->last_position;   //position(t-1)
+                m->last_position = m->position;         //positon(t)
                 m->position = m->last_position + (1 - damping) * (m->last_position - m->start_position) + (gravity / m->mass) * delta_t * delta_t;
+                //position(t+1)
                 // TODO (Part 4): Add global Verlet damping
             }            
         }
@@ -77,15 +77,18 @@ namespace CGL {
             // TODO (Part 3): Simulate one timestep of the rope using explicit Verlet （solving constraints)
             if (!s->m2->pinned)
             {
-                auto dis = (s->m1->position - s->m2->position);
-                //s->m1->position += -(dis / dis.norm()) * (dis.norm() - s->rest_length) *0.5;
-                s->m2->position += (dis / dis.norm()) * (dis.norm() - s->rest_length) *0.5;
+                auto dis = (s->m1->position - s->m2->position); //当前绳子长度
+                s->m2->position += (dis / dis.norm()) * (dis.norm() - s->rest_length) *0.5; //矫正绳长
             }
             if (!s->m1->pinned)
             {
                 auto dis = (s->m1->position - s->m2->position);
                 s->m1->position += -(dis / dis.norm()) * (dis.norm() - s->rest_length) *0.5;
             }
+
+            //其实，这样算法还是有问题：当绳子一端不动，另一端动的话，绳长会改变、
+            //                      且一个短点会被计算两次，又导致绳长改变。
+            //                      此外，先计算端点，再根据绳长修改位置和线更新spring再更新质点应该不一样的。
         }
     }
 }
